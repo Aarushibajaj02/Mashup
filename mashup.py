@@ -40,7 +40,7 @@ st.markdown("""
 
 # Main title
 st.markdown("<div class='main-title'>Mashup Generator</div>", unsafe_allow_html=True)
-st.write("Download videos from YouTube, trim each video and merge to create a Mashup.")
+st.write("Enter your favourite artist and we create a Mashup for you.")
 
 st.header("Please fill in the details")
 query = st.text_input("Enter Singer Name:","Sharry Mann")
@@ -50,7 +50,7 @@ email_address = st.text_input("Your email address:")
 
 output_folder = "videos"
 audio_folder = "audio"
-merged_audio_path = os.path.join(audio_folder, "merged_audio.wav")
+merged_audio_path = os.path.join(audio_folder, "merged_audio.mp3")
 zip_file_path = os.path.join(audio_folder, "merged_audio.zip")
 
 # Ensure output directories exist
@@ -75,7 +75,7 @@ def download_videos(query, num):
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
          # Construct and run the ytsearch query correctly
-        ydl.download([f"ytsearch{num_videos}:{search_query}"])
+        ydl.download([f"ytsearch{num}:{query}"])
 
 def trim_audio(duration):
     audio = []
@@ -84,12 +84,12 @@ def trim_audio(duration):
     
     for video in videos:
         video_path = os.path.join(output_folder, video)
-        audio_filename = sanitize_filename(f"{os.path.splitext(video)[0]}.wav")
+        audio_filename = sanitize_filename(f"{os.path.splitext(video)[0]}.mp3")
         audio_path = os.path.join(audio_folder, audio_filename)
         
         try:
-            video = mp.VideoFileClip(video_path).subclip(duration)
-            video.audio.write_audiofile(audio_path)
+            video = mp.VideoFileClip(video_path).subclip(0,duration)
+            video.audio.write_audiofile(audio_path,codec="mp3")
             audio.append(mp.AudioFileClip(audio_path))
         except Exception as e:
             st.error(f"Error processing {video}: {e}")
@@ -101,7 +101,7 @@ def trim_audio(duration):
 def merge_audio(audio):
     if audio:
         merged_audio = mp.concatenate_audioclips(audio)
-        merged_audio.write_audiofile(merged_audio_path)
+        merged_audio.write_audiofile(merged_audio_path,codec="mp3")
         
         with zipfile.ZipFile(zip_file_path, 'w') as zipf:
             zipf.write(merged_audio_path, os.path.basename(merged_audio_path))
@@ -116,7 +116,7 @@ def delete_files():
         video_path = os.path.join(output_folder, video_file)
         os.remove(video_path)
     
-    audio_files = [f for f in os.listdir(audio_folder) if f.endswith('.wav') and f != 'merged_audio.wav']
+    audio_files = [f for f in os.listdir(audio_folder) if f.endswith('.mp3') and f != 'merged_audio.mp3']
     for audio_file in audio_files:
         audio_path = os.path.join(audio_folder, audio_file)
         os.remove(audio_path)
@@ -135,20 +135,26 @@ def send_email(email):
     
     body = "Please find the attached Mashup."
     msg.attach(MIMEText(body, 'plain'))
-#ATTACHING AUDIO TO MAIL
-    with open(merged_audio_path, "rb") as attachment:
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(attachment.read())
-        encoders.encode_base64(part)
-        part.add_header("Content-Disposition", f"attachment; filename= {os.path.basename(merged_audio_path)}")
-        msg.attach(part)
-#SENDING THE MAIL
+    if os.path.isfile(merged_audio_path):
+        try:
+            with open(merged_audio_path, "rb") as attachment:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment.read())
+                encoders.encode_base64(part)
+                part.add_header("Content-Disposition", f"attachment; filename={os.path.basename(merged_audio_path)}")
+                msg.attach(part)
+        except Exception as e:
+            st.error(f"Error attaching audio file: {e}")
+            return
+    else:
+        st.error("Merged audio file not found. Unable to send email.")
+        return
+    
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
         server.starttls()
         server.login(sender_email, sender_password)
         server.send_message(msg)
 
-# Button to trigger the process
 if st.sidebar.button("Download"):
     with st.spinner("Downloading videos"):
         download_videos(query, num)
@@ -157,15 +163,19 @@ if st.sidebar.button("Download"):
     with st.spinner("Processing audio..."):
         audio_clips = trim_audio(duration)
         merge_audio(audio_clips)
+
+    # Check if the merged audio file exists before proceeding
+    if os.path.isfile(merged_audio_path):
         st.success("Audio processed and merged.")
+        st.audio(merged_audio_path)
 
-    st.audio(merged_audio_path)
-
-    with open(merged_audio_path, "rb") as audio_file:
-        st.download_button(label="Download Merged Audio", data=audio_file, file_name="merged_audio.wav", mime="audio/wav")
-    if email_address:
-        with st.spinner("Sending email..."):
-            send_email(email_address)
-            st.success(f"Merged audio sent to {email_address}.")
+        with open(merged_audio_path, "rb") as audio_file:
+            st.download_button(label="Download Merged Audio", data=audio_file, file_name="merged_audio.mp3", mime="audio/mpeg")
+        if email_address:
+            with st.spinner("Sending email..."):
+                send_email(email_address)
+                st.success(f"Merged audio sent to {email_address}.")
+    else:
+        st.error("Merged audio file was not created. Please check for errors in processing.")
     
     delete_files()
