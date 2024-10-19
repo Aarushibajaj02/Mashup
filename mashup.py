@@ -75,10 +75,10 @@ def download_videos(query, num):
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
          # Construct and run the ytsearch query correctly
-        ydl.download(["https://youtu.be/1DTmMQnd1JU?si=MHtDUAtXQM9xOrxP"])
+        ydl.download([f"ytsearch{num_videos}:{search_query}"])
 
 def trim_audio(duration):
-    audio_clips = []
+    audio = []
     # extract videos 
     videos = [i for i in os.listdir(output_folder) if i.endswith(('.mp4', '.mkv', '.avi', '.mov'))]
     
@@ -90,23 +90,23 @@ def trim_audio(duration):
         try:
             video = mp.VideoFileClip(video_path).subclip(duration)
             video.audio.write_audiofile(audio_path)
-            audio_clips.append(mp.AudioFileClip(audio_path))
+            audio.append(mp.AudioFileClip(audio_path))
         except Exception as e:
             st.error(f"Error processing {video}: {e}")
         finally:
             video.close()
     
-    return audio_clips
+    return audio
 
-def merge_audio(audio_clips):
-    if audio_clips:
-        merged_audio = mp.concatenate_audioclips(audio_clips)
+def merge_audio(audio):
+    if audio:
+        merged_audio = mp.concatenate_audioclips(audio)
         merged_audio.write_audiofile(merged_audio_path)
         
         with zipfile.ZipFile(zip_file_path, 'w') as zipf:
             zipf.write(merged_audio_path, os.path.basename(merged_audio_path))
         
-        for audio_clip in audio_clips:
+        for audio_clip in audio:
             audio_clip.close()
 
 def delete_files():
@@ -123,14 +123,14 @@ def delete_files():
     
     st.success("Temporary files have been deleted.")
 
-def send_email(recipient_email):
+def send_email(email):
     #to mail the generated mashup 
     sender_email = os.getenv("SENDER_EMAIL")
     sender_password = os.getenv("SENDER_PW")
     
     msg = MIMEMultipart()
     msg['From'] = sender_email
-    msg['To'] = recipient_email
+    msg['To'] = email
     msg['Subject'] = "Your Mashup has been generated.ENJOY! "
     
     body = "Please find the attached Mashup."
@@ -150,13 +150,22 @@ def send_email(recipient_email):
 
 # Button to trigger the process
 if st.sidebar.button("Download and Process"):
-    with st.spinner("Processing in the background..."):
-        download_videos(query, num)
-        audio_clips = trim_audio(duration)
+    with st.spinner("Downloading videos..."):
+        download_videos(search_query, num_videos)
+        st.success(f"Downloaded {num_videos} videos.")
+    
+    with st.spinner("Processing audio..."):
+        audio_clips = process_audio(trim_seconds)
         merge_audio(audio_clips)
-        
-        if email_address:
+        st.success("Audio processed and merged.")
+
+    st.audio(merged_audio_path)
+
+    with open(merged_audio_path, "rb") as audio_file:
+        st.download_button(label="Download Merged Audio", data=audio_file, file_name="merged_audio.wav", mime="audio/wav")
+    if email_address:
+        with st.spinner("Sending email..."):
             send_email(email_address)
-            st.sidebar.success(f"Merged audio sent to {email_address}.")
-        
-        delete_files()
+            st.success(f"Merged audio sent to {email_address}.")
+    
+    delete_files()
