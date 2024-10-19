@@ -56,6 +56,7 @@ zip_file_path = os.path.join(audio_folder, "merged_audio.zip")
 # Ensure output directories exist
 os.makedirs(output_folder, exist_ok=True)
 os.makedirs(audio_folder, exist_ok=True)
+os.makedirs(os.path.dirname(merged_audio_path), exist_ok=True)
 
 def sanitize_filename(file):
     #the filename is santized to remove invalid characters.
@@ -67,25 +68,14 @@ def download_videos(query, num):
     ydl_opts = {
         'ignoreerrors': True,  # Skip errors
         'format': 'best',
-        'cookiefile': 'path/to/cookies.txt',
         'noplaylist': True, #avoid downloading playlists
         'quiet': True,
         'outtmpl': os.path.join(output_folder, '%(title)s.%(ext)s')
     }
     
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            # Construct and run the ytsearch query correctly
-            ydl.download([f"ytsearch{num}:{query}"])
-    except yt_dlp.DownloadError as e:
-        print(f"Download error occurred: {str(e)}")
-        print("Detailed Traceback:")
-        traceback.print_exc() 
-    except Exception as e:
-        # Catch any unexpected error and print the traceback
-        print(f"An unexpected error occurred: {str(e)}")
-        print("Detailed Traceback:")
-        traceback.print_exc()
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+         # Construct and run the ytsearch query correctly
+        ydl.download(["https://youtu.be/1DTmMQnd1JU?si=MHtDUAtXQM9xOrxP"])
 
 def trim_audio(duration):
     audio_clips = []
