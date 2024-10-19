@@ -1,92 +1,3 @@
-# from youtube_search import YoutubeSearch
-# import streamlit as st
-# from pytube import YouTube
-# from moviepy.editor import *
-# import smtplib
-# from email.message import EmailMessage
-# from email.mime.text import MIMEText
-# from email.mime.multipart import MIMEMultipart
-# from email.mime.base import MIMEBase
-# from email import encoders
-# import zipfile
-# import re
-# import os
-
-# def downloadVideo(singer,n):
-# 	search = singer + 'songs'
-# 	output = YoutubeSearch(search,max_results = n).to_dict()
-# 	for i in output:
-# 		ytVideo = YouTube('https://www.youtube.com' + i['url_suffix'])
-# 		vid = ytVideo.streams.filter(file_extension = 'mp4').first()
-# 		vid.download(output_path=dest)
-
-# def trimToAudio(i):
-# 	clips = []
-# 	for file in os.listdir(dest):
-# 		filePath = os.path.join(dest,file)
-# 		subClip = VideoFileClip(filePath).subclip(0,i)
-# 		Audio = subClip.audio
-# 		clips.append(Audio)
-# 	trimmed = concatenate_audioclips(clips)
-# 	trimmed.write_audiofile('mashupfile.mp3')
-
-
-# def send_mail(recipient, content):
-
-#     mail = "aarushibajaj2004@gmail.com"
-#     email_password = "aarushi-1"
-
-#     msg = MIMEMultipart("")
-#     msg['Subject'] = "MashUp Songs Of Your Favourite Singer"
-#     msg['From'] = mail
-#     msg['To'] =recipient
-
-#     attachment = open(content,'rb')
-#     obj = MIMEBase('application','octet-stream')
-#     obj.set_payload((attachment).read())
-#     encoders.encode_base64(obj)
-#     obj.add_header('Content-Disposition',"attachment; filename= "+content)
-#     msg.attach(obj)
-
-#     # send email
-#     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-#         smtp.login(mail, email_password)
-#         smtp.send_message(msg)
-#         smtp.quit()
-#     print("YOUR MAIL HAS BEEN SENT SUCCESSFULLY")
-
-# def zip(file):
-#     final='mashupfile.zip'
-#     zipped=zipfile.ZipFile(final,'w')
-#     zipped.write(file,compress_type=zipfile.ZIP_DEFLATED)
-#     zipped.close()
-#     return final
-
-# def mainScript(singer,num,duration,to):
-# 	downloadVideo(singer,num)
-# 	trimToAudio(duration)
-# 	file = 'mashupfile.mp3'
-# 	send_mail(to,zip(file))
-
-# form = st.form(key='my_form')
-# singer = form.text_input(label='Singer',value='')
-# n = form.text_input(label='Number of songs',value=0)
-# dur = form.text_input(label='Duration of each song',value=0)
-# mailTo = form.text_input(label='Email',value='')
-# submit_button = form.form_submit_button(label='Submit')
-# regex = re.compile(r'([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+')
-# if submit_button:
-# 	if not singer.strip():
-# 		st.error('Enter Name of singer')
-# 	elif int(n)==0:
-# 		st.error('Enter Number of songss')
-# 	elif int(dur)==0:
-# 		st.error("Enter Duration")
-# 	elif not re.match(regex,mailTo):
-# 		st.error('Enter Email')
-# 	else:
-# 		dest = "D:\predictiveAnalysis\Mashup\VidFiles"
-# 		mainScript(singer,int(n),int(dur),mailTo)
 
 import streamlit as st
 import yt_dlp
@@ -106,15 +17,16 @@ st.set_page_config(page_title="Mashup Generator", layout="wide")
 st.markdown("""
     <style>
     body {
-        background-color: white;
+        background-color:white ; 
     }
     .main-title {
         font-size: 2.5rem;
-        color: #1f77b4;
+        color: red;
         text-align: center;
+        font-weight:bold;
     }
     .sidebar .sidebar-content {
-        background-color: #f0f0f0;
+        background-color: white;
         border-radius: 10px;
         padding: 10px;
         box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
@@ -122,28 +34,18 @@ st.markdown("""
     .stTextInput, .stNumberInput {
         margin-bottom: 20px;
     }
-    .stButton>button {
-        background-color: #ff6600 !important;
-        color: white !important;
-        font-size: 16px;
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-    }
-    .stButton>button:hover {
-        background-color: #cc5200 !important;
-    }
+
     </style>
     """, unsafe_allow_html=True)
 
 # Main title
-st.markdown("<div class='main-title'>Mashup Generator🎶</div>", unsafe_allow_html=True)
+st.markdown("<div class='main-title'>Mashup Generator</div>", unsafe_allow_html=True)
 st.write("Download videos from YouTube, trim each video and merge to create a Mashup.")
 
-# st.header("Search and Download Settings")
-query = st.text_input("Enter Singer Name:")
-num = st.number_input("Number of videos to download:", min_value=1, max_value=10, value=3)
-duration = st.number_input("Duration of each video:", min_value=0, max_value=60, value=5)
+st.header("Please fill in the details")
+query = st.text_input("Enter Singer Name:","Sharry Mann")
+num = st.number_input("Number of videos to download:", min_value=1, max_value=10)
+duration = st.number_input("Duration of each video(seconds):", min_value=0, max_value=60)
 email_address = st.text_input("Your email address:")
 
 output_folder = "videos"
@@ -155,7 +57,6 @@ zip_file_path = os.path.join(audio_folder, "merged_audio.zip")
 os.makedirs(output_folder, exist_ok=True)
 os.makedirs(audio_folder, exist_ok=True)
 
-# Helper functions
 def sanitize_filename(file):
     #the filename is santized to remove invalid characters.
     sanitized_file = re.sub(r'[<>:"/\\|?*\x00-\x1F]', '', file)
