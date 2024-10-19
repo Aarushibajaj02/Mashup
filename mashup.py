@@ -149,13 +149,13 @@ def send_email(email):
         server.send_message(msg)
 
 # Button to trigger the process
-if st.sidebar.button("Download and Process"):
-    with st.spinner("Downloading videos..."):
-        download_videos(search_query, num_videos)
-        st.success(f"Downloaded {num_videos} videos.")
+if st.sidebar.button("Download"):
+    with st.spinner("Downloading videos"):
+        download_videos(query, num)
+        st.success(f"Downloaded {num} videos.")
     
     with st.spinner("Processing audio..."):
-        audio_clips = process_audio(trim_seconds)
+        audio_clips = trim_audio(duration)
         merge_audio(audio_clips)
         st.success("Audio processed and merged.")
 
