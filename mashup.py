@@ -13,7 +13,6 @@ from email.mime.text import MIMEText
 
 st.set_page_config(page_title="Mashup Generator", layout="wide")
 
-# Add custom CSS to style the page: white background and orange buttons
 st.markdown("""
     <style>
     body {
