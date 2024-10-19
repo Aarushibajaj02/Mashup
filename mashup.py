@@ -10,6 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from email.mime.text import MIMEText
+import traceback
 
 st.set_page_config(page_title="Mashup Generator", layout="wide")
 
@@ -64,14 +65,27 @@ def sanitize_filename(file):
 def download_videos(query, num):
     #Download videos as per the query-singer name , and number of videos
     ydl_opts = {
-        'format': 'best[ext=mp4]/best[ext=webm]/best',
+        'ignoreerrors': True,  # Skip errors
+        'format': 'best',
+        'cookiefile': 'path/to/cookies.txt',
         'noplaylist': True, #avoid downloading playlists
         'quiet': True,
         'outtmpl': os.path.join(output_folder, '%(title)s.%(ext)s')
     }
     
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([f"ytsearch{num}:{query}"])
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            # Construct and run the ytsearch query correctly
+            ydl.download([f"ytsearch{num}:{query}"])
+    except yt_dlp.DownloadError as e:
+        print(f"Download error occurred: {str(e)}")
+        print("Detailed Traceback:")
+        traceback.print_exc() 
+    except Exception as e:
+        # Catch any unexpected error and print the traceback
+        print(f"An unexpected error occurred: {str(e)}")
+        print("Detailed Traceback:")
+        traceback.print_exc()
 
 def trim_audio(duration):
     audio_clips = []
