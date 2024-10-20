@@ -1,1 +1,5 @@
 streamlit
+yt_dlp
+moviepy.editor
+os
+zipfile
